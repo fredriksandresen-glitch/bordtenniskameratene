@@ -1,0 +1,7 @@
+node_modules/
+.dfx/
+dist/
+.mops/
+.env
+*.log
+.DS_Store

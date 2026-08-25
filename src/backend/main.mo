@@ -1,0 +1,235 @@
+import Map "mo:base/HashMap";
+import Text "mo:base/Text";
+import Nat "mo:base/Nat";
+import Nat32 "mo:base/Nat32";
+import Array "mo:base/Array";
+import Iter "mo:base/Iter";
+import Time "mo:base/Time";
+import Option "mo:base/Option";
+import Buffer "mo:base/Buffer";
+import Float "mo:base/Float";
+import Blob "mo:base/Blob";
+import Principal "mo:base/Principal";
+
+persistent actor Bordtennis {
+
+  // ---------- Types ----------
+
+  public type PlayerId = Nat;
+  public type GameId = Nat;
+
+  public type Player = {
+    id : PlayerId;
+    name : Text;
+    emoji : Text;          // fun avatar fallback
+    photo : ?Text;         // data-url or asset path
+    active : Bool;
+    createdAt : Int;
+  };
+
+  public type Result = {
+    playerId : PlayerId;
+    placement : Nat;       // 1 = winner
+    points : Nat;          // points awarded for this game
+  };
+
+  public type Game = {
+    id : GameId;
+    playedAt : Int;
+    note : Text;
+    results : [Result];
+    recordedBy : Principal;
+  };
+
+  public type Standing = {
+    playerId : PlayerId;
+    name : Text;
+    emoji : Text;
+    photo : ?Text;
+    played : Nat;
+    totalPoints : Nat;
+    avgPoints : Float;
+    wins : Nat;
+    winPct : Float;
+    rank : Nat;
+  };
+
+  // ---------- State ----------
+
+  var nextPlayerId : Nat = 0;
+  var nextGameId : Nat = 0;
+  var playerEntries : [(PlayerId, Player)] = [];
+  var gameEntries : [(GameId, Game)] = [];
+
+  transient var players = Map.HashMap<PlayerId, Player>(16, Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
+  transient var games = Map.HashMap<GameId, Game>(64, Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
+
+  system func preupgrade() {
+    playerEntries := Iter.toArray(players.entries());
+    gameEntries := Iter.toArray(games.entries());
+  };
+
+  system func postupgrade() {
+    for ((k, v) in playerEntries.vals()) { players.put(k, v) };
+    for ((k, v) in gameEntries.vals()) { games.put(k, v) };
+    playerEntries := [];
+    gameEntries := [];
+  };
+
+  // ---------- Scoring ----------
+  // Placement points: 1st place gets N points where N = number of participants,
+  // last gets 1. Configurable later if the gang wants something else.
+  // Poengtabell hentet direkte fra Excel-arket ("Med N stk").
+  // Vinner får alltid 8; fordelingen nedover avhenger av antall deltakere.
+  transient let TABLE : [[Nat]] = [
+    [8, 0],                                  // 2 spillere
+    [8, 4, 0],                               // 3
+    [8, 6, 3, 0],                            // 4
+    [8, 6, 4, 2, 0],                         // 5
+    [8, 6, 4, 2, 1, 0],                      // 6
+    [8, 6, 4, 3, 2, 1, 0],                   // 7
+    [8, 6, 5, 4, 3, 2, 1, 0],                // 8
+    [8, 6, 5, 4, 3, 2, 1, 1, 0],             // 9
+    [8, 6, 5, 4, 3, 2, 2, 1, 1, 0],          // 10
+    [8, 6, 5, 4, 3, 2, 2, 1, 1, 0, 0],       // 11
+    [8, 6, 5, 4, 3, 2, 2, 1, 1, 1, 0, 0],    // 12
+    [8, 6, 5, 4, 3, 2, 2, 2, 1, 1, 1, 0, 0], // 13
+  ];
+
+  func pointsFor(placement : Nat, participants : Nat) : Nat {
+    if (placement == 0 or placement > participants or participants < 2) { return 0 };
+    let idx = if (participants > 13) 11 else participants - 2;
+    let row = TABLE[idx];
+    if (placement <= row.size()) { row[placement - 1] } else { 0 }
+  };
+
+  // ---------- Players ----------
+
+  public shared ({ caller }) func addPlayer(name : Text, emoji : Text) : async Player {
+    ignore caller;
+    let id = nextPlayerId;
+    nextPlayerId += 1;
+    let p : Player = {
+      id;
+      name;
+      emoji;
+      photo = null;
+      active = true;
+      createdAt = Time.now();
+    };
+    players.put(id, p);
+    p
+  };
+
+  public func setPhoto(id : PlayerId, photo : Text) : async Bool {
+    switch (players.get(id)) {
+      case null { false };
+      case (?p) {
+        players.put(id, { p with photo = ?photo });
+        true
+      };
+    }
+  };
+
+  public func setActive(id : PlayerId, active : Bool) : async Bool {
+    switch (players.get(id)) {
+      case null { false };
+      case (?p) { players.put(id, { p with active }); true };
+    }
+  };
+
+  public query func listPlayers() : async [Player] {
+    Iter.toArray(players.vals())
+  };
+
+  // ---------- Games ----------
+  // ranking = playerIds in finishing order (index 0 = winner)
+  public shared ({ caller }) func recordGame(ranking : [PlayerId], note : Text) : async ?Game {
+    if (Principal.isAnonymous(caller)) { return null };
+    let n = ranking.size();
+    if (n < 2) { return null };
+    let buf = Buffer.Buffer<Result>(n);
+    var i = 0;
+    while (i < n) {
+      let pid = ranking[i];
+      if (Option.isNull(players.get(pid))) { return null };
+      buf.add({ playerId = pid; placement = i + 1; points = pointsFor(i + 1, n) });
+      i += 1;
+    };
+    let id = nextGameId;
+    nextGameId += 1;
+    let g : Game = { id; playedAt = Time.now(); note; results = Buffer.toArray(buf); recordedBy = caller };
+    games.put(id, g);
+    ?g
+  };
+
+  // Import av historikk fra Excel-arket (eksplisitt dato).
+  public shared ({ caller }) func importGame(ranking : [PlayerId], note : Text, playedAt : Int) : async ?Game {
+    if (Principal.isAnonymous(caller)) { return null };
+    let n = ranking.size();
+    if (n < 2) { return null };
+    let buf = Buffer.Buffer<Result>(n);
+    var i = 0;
+    while (i < n) {
+      let pid = ranking[i];
+      if (Option.isNull(players.get(pid))) { return null };
+      buf.add({ playerId = pid; placement = i + 1; points = pointsFor(i + 1, n) });
+      i += 1;
+    };
+    let id = nextGameId;
+    nextGameId += 1;
+    let g : Game = { id; playedAt; note; results = Buffer.toArray(buf); recordedBy = caller };
+    games.put(id, g);
+    ?g
+  };
+
+  public func deleteGame(id : GameId) : async Bool {
+    switch (games.remove(id)) { case null { false }; case (?_) { true } }
+  };
+
+  public query func listGames() : async [Game] {
+    Iter.toArray(games.vals())
+  };
+
+  // ---------- Standings ----------
+
+  public query func standings() : async [Standing] {
+    let acc = Map.HashMap<PlayerId, (Nat, Nat, Nat)>(16, Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
+    for (g in games.vals()) {
+      for (r in g.results.vals()) {
+        let (played, pts, wins) = Option.get(acc.get(r.playerId), (0, 0, 0));
+        acc.put(r.playerId, (played + 1, pts + r.points, wins + (if (r.placement == 1) 1 else 0)));
+      };
+    };
+    let buf = Buffer.Buffer<Standing>(16);
+    for (p in players.vals()) {
+      let (played, pts, wins) = Option.get(acc.get(p.id), (0, 0, 0));
+      let avg = if (played == 0) 0.0 else Float.fromInt(pts) / Float.fromInt(played);
+      let wpct = if (played == 0) 0.0 else Float.fromInt(wins) / Float.fromInt(played);
+      buf.add({
+        playerId = p.id;
+        name = p.name;
+        emoji = p.emoji;
+        photo = p.photo;
+        played;
+        totalPoints = pts;
+        avgPoints = avg;
+        wins;
+        winPct = wpct;
+        rank = 0;
+      });
+    };
+    let arr = Array.sort(Buffer.toArray(buf), func(a : Standing, b : Standing) : { #less; #equal; #greater } {
+      if (a.avgPoints > b.avgPoints) { #less }
+      else if (a.avgPoints < b.avgPoints) { #greater }
+      else if (a.wins > b.wins) { #less }
+      else if (a.wins < b.wins) { #greater }
+      else { #equal }
+    });
+    Array.tabulate<Standing>(arr.size(), func(i) { { arr[i] with rank = i + 1 } })
+  };
+
+  public query func health() : async Text { "bordtennis-ok" };
+
+  public shared query ({ caller }) func whoami() : async Principal { caller };
+}
