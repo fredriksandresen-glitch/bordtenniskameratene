@@ -1,0 +1,104 @@
+(
+  vec {
+    record {
+      id = 0 : nat;
+      playedAt = 1_787_225_400_000_000_000 : int;
+      note = "Psykologisk spill fra Ola, men sterk første seier";
+      results = vec {
+        record { placement = 1 : nat; playerId = 0 : nat; points = 8 : nat };
+        record { placement = 2 : nat; playerId = 1 : nat; points = 6 : nat };
+        record { placement = 3 : nat; playerId = 2 : nat; points = 4 : nat };
+        record { placement = 4 : nat; playerId = 4 : nat; points = 2 : nat };
+        record { placement = 5 : nat; playerId = 3 : nat; points = 1 : nat };
+        record { placement = 6 : nat; playerId = 5 : nat; points = 0 : nat };
+      };
+      recordedBy = principal "xilcw-zliv7-iwqwb-dpfsi-qxpvg-2viiy-c4rvz-cuhri-nodyy-kpagw-aqe";
+    };
+    record {
+      id = 1 : nat;
+      playedAt = 1_787_311_800_000_000_000 : int;
+      note = "";
+      results = vec {
+        record { placement = 1 : nat; playerId = 0 : nat; points = 8 : nat };
+        record { placement = 2 : nat; playerId = 1 : nat; points = 6 : nat };
+        record { placement = 3 : nat; playerId = 3 : nat; points = 4 : nat };
+        record { placement = 4 : nat; playerId = 2 : nat; points = 2 : nat };
+        record { placement = 5 : nat; playerId = 6 : nat; points = 1 : nat };
+        record { placement = 6 : nat; playerId = 7 : nat; points = 0 : nat };
+      };
+      recordedBy = principal "xilcw-zliv7-iwqwb-dpfsi-qxpvg-2viiy-c4rvz-cuhri-nodyy-kpagw-aqe";
+    };
+    record {
+      id = 2 : nat;
+      playedAt = 1_787_571_000_000_000_000 : int;
+      note = "";
+      results = vec {
+        record { placement = 1 : nat; playerId = 1 : nat; points = 8 : nat };
+        record { placement = 2 : nat; playerId = 8 : nat; points = 6 : nat };
+        record { placement = 3 : nat; playerId = 6 : nat; points = 4 : nat };
+        record { placement = 4 : nat; playerId = 2 : nat; points = 2 : nat };
+        record { placement = 5 : nat; playerId = 9 : nat; points = 1 : nat };
+        record { placement = 6 : nat; playerId = 4 : nat; points = 0 : nat };
+      };
+      recordedBy = principal "xilcw-zliv7-iwqwb-dpfsi-qxpvg-2viiy-c4rvz-cuhri-nodyy-kpagw-aqe";
+    };
+    record {
+      id = 3 : nat;
+      playedAt = 1_787_660_525_224_965_673 : int;
+      note = "Jørgen kommer sent og gir bort poeng. Dan Herman kommer i runde 3 og tar 3. plass";
+      results = vec {
+        record { placement = 1 : nat; playerId = 1 : nat; points = 8 : nat };
+        record { placement = 2 : nat; playerId = 0 : nat; points = 6 : nat };
+        record { placement = 3 : nat; playerId = 3 : nat; points = 4 : nat };
+        record { placement = 4 : nat; playerId = 2 : nat; points = 2 : nat };
+        record { placement = 5 : nat; playerId = 10 : nat; points = 1 : nat };
+        record { placement = 6 : nat; playerId = 4 : nat; points = 0 : nat };
+      };
+      recordedBy = principal "tlp65-etdyu-mmbmh-xqmjg-rvr24-gslcl-45iyg-7bim6-lhftb-dsbkv-5ae";
+    };
+    record {
+      id = 4 : nat;
+      playedAt = 1_787_746_941_244_835_109 : int;
+      note = "";
+      results = vec {
+        record { placement = 1 : nat; playerId = 2 : nat; points = 8 : nat };
+        record { placement = 2 : nat; playerId = 9 : nat; points = 6 : nat };
+        record { placement = 3 : nat; playerId = 11 : nat; points = 4 : nat };
+        record { placement = 4 : nat; playerId = 10 : nat; points = 3 : nat };
+        record { placement = 5 : nat; playerId = 4 : nat; points = 2 : nat };
+        record { placement = 6 : nat; playerId = 5 : nat; points = 1 : nat };
+        record { placement = 7 : nat; playerId = 6 : nat; points = 0 : nat };
+      };
+      recordedBy = principal "tlp65-etdyu-mmbmh-xqmjg-rvr24-gslcl-45iyg-7bim6-lhftb-dsbkv-5ae";
+    };
+    record {
+      id = 5 : nat;
+      playedAt = 1_787_833_337_249_047_709 : int;
+      note = "Fredrik, Andreas og Khiem røk ut  runde 3";
+      results = vec {
+        record { placement = 1 : nat; playerId = 3 : nat; points = 8 : nat };
+        record { placement = 2 : nat; playerId = 2 : nat; points = 6 : nat };
+        record { placement = 3 : nat; playerId = 6 : nat; points = 4 : nat };
+        record { placement = 4 : nat; playerId = 13 : nat; points = 2 : nat };
+        record { placement = 5 : nat; playerId = 12 : nat; points = 0 : nat };
+      };
+      recordedBy = principal "tlp65-etdyu-mmbmh-xqmjg-rvr24-gslcl-45iyg-7bim6-lhftb-dsbkv-5ae";
+    };
+    record {
+      id = 6 : nat;
+      playedAt = 1_787_920_230_241_069_639 : int;
+      note = "";
+      results = vec {
+        record { placement = 1 : nat; playerId = 1 : nat; points = 8 : nat };
+        record { placement = 2 : nat; playerId = 6 : nat; points = 6 : nat };
+        record { placement = 3 : nat; playerId = 13 : nat; points = 5 : nat };
+        record { placement = 4 : nat; playerId = 2 : nat; points = 4 : nat };
+        record { placement = 5 : nat; playerId = 3 : nat; points = 3 : nat };
+        record { placement = 6 : nat; playerId = 9 : nat; points = 2 : nat };
+        record { placement = 7 : nat; playerId = 10 : nat; points = 1 : nat };
+        record { placement = 8 : nat; playerId = 5 : nat; points = 0 : nat };
+      };
+      recordedBy = principal "tlp65-etdyu-mmbmh-xqmjg-rvr24-gslcl-45iyg-7bim6-lhftb-dsbkv-5ae";
+    };
+  },
+)

@@ -99,7 +99,7 @@ export default function App() {
         <button className={tab === "ppl" ? "on" : ""} onClick={() => setTab("ppl")}>Spillere</button>
       </div>
 
-      {tab === "rank" && <Ranking board={board} />}
+      {tab === "rank" && <Ranking board={board} games={games} />}
       {tab === "new" && <NewGame players={players} actor={actor} onSaved={() => { refresh(); setTab("rank"); flash("Runde lagret! 🎉"); }} guest={principal === "guest"} />}
       {tab === "hist" && <History games={games} players={players} />}
       {tab === "ppl" && <People players={players} actor={actor} onChange={() => refresh()} flash={flash} guest={principal === "guest"} />}
@@ -109,14 +109,72 @@ export default function App() {
   );
 }
 
-function Ranking({ board }) {
+// Regner ut hvordan tabellen så ut FØR siste runde, slik at vi kan vise
+// opp-/nedrykk. Alt skjer i nettleseren – ingen data endres på kjeden.
+function useMovement(board, games) {
+  return useMemo(() => {
+    if (!board.length || games.length < 2) return { map: {}, lastDate: null, hasPrev: false };
+
+    // games er sortert nyest først
+    const last = games[0];
+    const earlier = games.slice(1);
+
+    const agg = {};
+    for (const g of earlier) {
+      for (const r of g.results) {
+        const k = String(r.playerId);
+        const a = agg[k] || (agg[k] = { played: 0, pts: 0, wins: 0 });
+        a.played += 1;
+        a.pts += Number(r.points);
+        if (Number(r.placement) === 1) a.wins += 1;
+      }
+    }
+    const prevOf = (s) => {
+      const a = agg[String(s.playerId)] || { played: 0, pts: 0, wins: 0 };
+      return { played: a.played, avg: a.played ? a.pts / a.played : 0, wins: a.wins };
+    };
+
+    // Samme sortering som backend: snitt, så antall seire. Stabil sort på
+    // backend-rekkefølgen gjør at uavgjorte havner likt begge veier.
+    const ordered = [...board].sort((x, y) => {
+      const a = prevOf(x);
+      const b = prevOf(y);
+      if (a.avg !== b.avg) return b.avg - a.avg;
+      return b.wins - a.wins;
+    });
+
+    const map = {};
+    ordered.forEach((s, i) => {
+      map[String(s.playerId)] = { prevRank: i + 1, played: prevOf(s).played };
+    });
+
+    return { map, lastDate: new Date(Number(last.playedAt / 1000000n)), hasPrev: true };
+  }, [board, games]);
+}
+
+function Move({ mv, rank, hasPrev }) {
+  if (!hasPrev || !mv || mv.played === 0) return <span className="mv new">NY</span>;
+  const d = mv.prevRank - rank;
+  if (d > 0) return <span className="mv up">▲{d}</span>;
+  if (d < 0) return <span className="mv dn">▼{-d}</span>;
+  return <span className="mv same">–</span>;
+}
+
+function Ranking({ board, games }) {
+  const { map, lastDate, hasPrev } = useMovement(board, games);
   if (!board.length) return <div className="empty">Ingen runder spilt ennå.<br />Trykk «Ny runde» og kom i gang 🏓</div>;
   return (
     <>
+      {hasPrev && lastDate && (
+        <p className="hint">
+          Pilene viser endring etter runden {lastDate.toLocaleDateString("nb-NO", { weekday: "long", day: "numeric", month: "long" })}
+        </p>
+      )}
       {board.map((s) => (
         <div className="card" key={String(s.playerId)}>
           <div className="row">
             <div className={"rk g" + Number(s.rank)}>{medal(Number(s.rank))}</div>
+            <Move mv={map[String(s.playerId)]} rank={Number(s.rank)} hasPrev={hasPrev} />
             <div className="ava">
               {s.photo?.[0] ? <img src={s.photo[0]} alt="" /> : <span>{s.emoji}</span>}
             </div>
