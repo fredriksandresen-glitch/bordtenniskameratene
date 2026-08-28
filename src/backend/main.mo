@@ -58,6 +58,9 @@ persistent actor Bordtennis {
 
   var nextPlayerId : Nat = 0;
   var nextGameId : Nat = 0;
+  // Minimum antall spilte runder for å komme på den offisielle rankingen.
+  // Justerbar av innloggede brukere. Eksisterende data røres ikke av dette.
+  var minGames : Nat = 3;
   var playerEntries : [(PlayerId, Player)] = [];
   var gameEntries : [(GameId, Game)] = [];
 
@@ -227,6 +230,17 @@ persistent actor Bordtennis {
       else { #equal }
     });
     Array.tabulate<Standing>(arr.size(), func(i) { { arr[i] with rank = i + 1 } })
+  };
+
+  // ---------- Innstillinger ----------
+
+  public query func getMinGames() : async Nat { minGames };
+
+  public shared ({ caller }) func setMinGames(n : Nat) : async Bool {
+    if (Principal.isAnonymous(caller)) { return false };
+    if (n < 1 or n > 50) { return false };
+    minGames := n;
+    true
   };
 
   public query func health() : async Text { "bordtennis-ok" };

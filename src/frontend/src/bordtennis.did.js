@@ -36,6 +36,8 @@ export const idlFactory = ({ IDL }) => {
     deleteGame: IDL.Func([IDL.Nat], [IDL.Bool], []),
     listGames: IDL.Func([], [IDL.Vec(Game)], ["query"]),
     standings: IDL.Func([], [IDL.Vec(Standing)], ["query"]),
+    getMinGames: IDL.Func([], [IDL.Nat], ["query"]),
+    setMinGames: IDL.Func([IDL.Nat], [IDL.Bool], []),
     health: IDL.Func([], [IDL.Text], ["query"]),
     whoami: IDL.Func([], [IDL.Principal], ["query"]),
   });

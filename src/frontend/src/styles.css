@@ -57,6 +57,25 @@ header.top h1 { font-size: 22px; margin: 0; letter-spacing: -0.5px; }
 .mv.dn { color: #ff8095; background: rgba(255,128,149,.12); }
 .mv.same { color: var(--muted); background: transparent; }
 .mv.new { color: #ffd166; background: rgba(255,209,102,.14); font-size: 10px; }
+.minbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px 12px; margin-bottom: 12px;
+}
+.minbar .sub { font-size: 13px; }
+.minbar .pill { margin-left: 0; }
+.minedit { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.minedit input { width: 68px; padding: 7px 9px; font-size: 14px; text-align: center; }
+.sectionhead {
+  color: var(--muted); font-size: 12px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .6px; margin: 20px 0 8px; padding-left: 4px;
+}
+.card.dim { opacity: .62; border-style: dashed; }
+.rkchip {
+  font-size: 11px; font-weight: 800; color: var(--acc2);
+  background: rgba(77,212,255,.12); border-radius: 7px; padding: 2px 6px; vertical-align: middle;
+}
+.rkchip.off { color: var(--muted); background: rgba(147,160,200,.12); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 .pick {
   border: 2px solid var(--line); background: var(--card2); border-radius: 18px;
