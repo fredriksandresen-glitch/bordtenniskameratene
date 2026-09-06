@@ -76,6 +76,42 @@ header.top h1 { font-size: 22px; margin: 0; letter-spacing: -0.5px; }
   background: rgba(77,212,255,.12); border-radius: 7px; padding: 2px 6px; vertical-align: middle;
 }
 .rkchip.off { color: var(--muted); background: rgba(147,160,200,.12); }
+.card.tappable { cursor: pointer; transition: .12s; }
+.card.tappable:active { transform: scale(.985); }
+.chips.seasons { margin-bottom: 12px; }
+.chips.seasons .chip { font-size: 13px; font-weight: 700; padding: 7px 13px; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.bdg {
+  font-size: 14px; background: var(--card2); border: 1px solid var(--line);
+  border-radius: 999px; padding: 2px 7px; display: inline-flex; align-items: center; gap: 4px;
+}
+.bdgt { font-size: 10px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+.note {
+  margin-top: 8px; background: rgba(77,212,255,.07); border-left: 3px solid var(--acc2);
+  border-radius: 0 10px 10px 0; padding: 8px 10px; font-size: 13px; color: #cfe6ff; font-style: italic;
+}
+.note.big { font-size: 15px; padding: 11px 13px; line-height: 1.45; }
+.notebox { margin: 16px 0 12px; }
+.notelabel { font-weight: 800; font-size: 14px; margin-bottom: 6px; }
+.notebox textarea { min-height: 84px; resize: vertical; line-height: 1.45; }
+.notebox .sub { margin-top: 6px; }
+.sheet {
+  position: fixed; inset: 0; z-index: 60; background: rgba(6,10,24,.72);
+  backdrop-filter: blur(3px); display: flex; align-items: flex-end; justify-content: center;
+}
+.sheetin {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 22px 22px 0 0;
+  width: 100%; max-width: 720px; max-height: 88dvh; overflow-y: auto; padding: 18px 16px 32px;
+  animation: rise .18s ease-out;
+}
+@keyframes rise { from { transform: translateY(24px); opacity: .4; } }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 4px; }
+.kpi {
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px 4px; text-align: center;
+}
+.kpi b { display: block; font-size: 18px; }
+.kpi span { font-size: 11px; color: var(--muted); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 .pick {
   border: 2px solid var(--line); background: var(--card2); border-radius: 18px;
