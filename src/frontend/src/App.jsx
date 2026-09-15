@@ -405,8 +405,28 @@ function Ranking({ board, games, badges, minGames, actor, guest, onPick, onMinCh
       )}
 
       {official.length === 0 && <div className="empty">Ingen har spilt {minGames} runder ennå 🤷</div>}
-      {official.map((s, i) => (
-        <RankRow key={String(s.playerId)} s={s} rank={i + 1} mv={map[String(s.playerId)]}
+      {official.length > 0 && (
+        <div className="ranking-podium" aria-label="Pallplasser">
+          {official.slice(0, 3).map((s, i) => (
+            <button type="button" className={"podium-place place-" + (i + 1)} key={String(s.playerId)}
+              onClick={() => onPick && onPick(s)} aria-label={`${i + 1}. plass: ${s.name}. Se spillerkort`}>
+              <div className="podium-info">
+                <div className="ava">
+                  {s.photo?.[0] ? <img src={s.photo[0]} alt="" /> : <span>{s.emoji}</span>}
+                </div>
+                <div className="nm">{s.name}</div>
+                <Move mv={map[String(s.playerId)]} rank={i + 1} hasPrev={hasPrev} />
+                <div className="podium-score"><b>{fmt(s.avgPoints)}</b><span className="sub">snitt</span></div>
+                <div className="sub">{s.played} runder · {s.wins} seire · {fmt(s.winPct * 100, 0)}% 🏆</div>
+                <Badges list={badges[String(s.playerId)]} />
+              </div>
+              <div className="podium-step"><span aria-hidden="true">{medal(i + 1)}</span><b>{i + 1}. plass</b></div>
+            </button>
+          ))}
+        </div>
+      )}
+      {official.slice(3).map((s, i) => (
+        <RankRow key={String(s.playerId)} s={s} rank={i + 4} mv={map[String(s.playerId)]}
           hasPrev={hasPrev} minGames={minGames} badges={badges[String(s.playerId)]} onPick={onPick} />
       ))}
 

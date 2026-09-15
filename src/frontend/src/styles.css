@@ -49,6 +49,34 @@ header.top h1 { font-size: 22px; margin: 0; letter-spacing: -0.5px; }
 .stat b { font-size: 20px; }
 .rk { width: 34px; text-align: center; font-weight: 900; font-size: 18px; color: var(--muted); }
 .rk.g1 { color: #ffd166; } .rk.g2 { color: #cfd8ff; } .rk.g3 { color: #e8a06a; }
+.ranking-podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 18px 0 20px; align-items: stretch; }
+.podium-place { min-width: 0; grid-row: 1; display: flex; flex-direction: column; padding: 0; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--card); color: var(--txt); font: inherit; text-align: center; cursor: pointer; }
+.podium-place:focus-visible { outline: 3px solid var(--acc2); outline-offset: 3px; }
+.podium-place.place-1 { grid-column: 2; border-color: #ffd16680; }
+.podium-place.place-2 { grid-column: 1; margin-top: 22px; }
+.podium-place.place-3 { grid-column: 3; margin-top: 38px; }
+.podium-info { padding: 14px 10px; flex: 1; min-width: 0; }
+.podium-info .ava { width: 60px; height: 60px; margin: 0 auto 10px; font-size: 30px; border-radius: 50%; }
+.place-1 .ava { border: 2px solid var(--gold); }
+.podium-info .nm { overflow-wrap: anywhere; margin-bottom: 8px; }
+.podium-score { display: flex; justify-content: center; align-items: baseline; gap: 4px; margin-top: 8px; }
+.podium-score b { font-size: 24px; }
+.podium-info .badges { justify-content: center; }
+.podium-info .bdg { max-width: 100%; }
+.podium-info .bdgt { white-space: normal; overflow-wrap: anywhere; }
+.podium-step { min-height: 58px; display: flex; flex-direction: column; justify-content: center; gap: 3px; background: #cfd8ff12; color: #cfd8ff; padding: 8px; font-size: 13px; }
+.podium-step > span { font-size: 25px; }
+.place-1 .podium-step { min-height: 82px; background: #ffd1661a; color: var(--gold); }
+.place-3 .podium-step { min-height: 44px; background: #e8a06a14; color: #e8a06a; }
+@media (max-width: 420px) {
+  .ranking-podium { gap: 6px; }
+  .podium-info { padding: 12px 5px; }
+  .podium-info .ava { width: 48px; height: 48px; font-size: 26px; }
+  .podium-info .nm { font-size: 13px; }
+  .podium-info .sub { font-size: 10px; }
+  .podium-score b { font-size: 21px; }
+  .podium-info .bdg { padding: 2px 4px; gap: 2px; }
+}
 .mv {
   font-size: 12px; font-weight: 900; min-width: 34px; text-align: center;
   padding: 3px 6px; border-radius: 8px; letter-spacing: -0.3px;
