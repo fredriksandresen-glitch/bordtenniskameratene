@@ -24,7 +24,8 @@ Erstatter Excel-arket `Ranking Bordtennis 2026.xlsx`.
 ## Poengmodell
 
 Hentet direkte fra Excel-arket (tabellen «Med N stk»). Vinner får alltid **8 poeng**,
-fordelingen nedover avhenger av antall deltakere:
+fordelingen nedover avhenger av antall deltakere. Regelen for ni spillere ble
+avklart 22. oktober 2026 til 8–7–6–5–4–3–2–1–0; øvrige fordelinger er uendret:
 
 | Deltakere | Poeng 1.–N. plass |
 | --- | --- |
@@ -34,7 +35,7 @@ fordelingen nedover avhenger av antall deltakere:
 | 6 | 8-6-4-2-1-0 |
 | 7 | 8-6-4-3-2-1-0 |
 | 8 | 8-6-5-4-3-2-1-0 |
-| 9 | 8-6-5-4-3-2-1-1-0 |
+| 9 | 8-7-6-5-4-3-2-1-0 |
 | 10 | 8-6-5-4-3-2-2-1-1-0 |
 | 13 | 8-6-5-4-3-2-2-2-1-1-1-0-0 |
 

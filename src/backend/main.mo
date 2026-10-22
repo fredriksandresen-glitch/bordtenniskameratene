@@ -80,9 +80,8 @@ persistent actor Bordtennis {
   };
 
   // ---------- Scoring ----------
-  // Placement points: 1st place gets N points where N = number of participants,
-  // last gets 1. Configurable later if the gang wants something else.
   // Poengtabell hentet direkte fra Excel-arket ("Med N stk").
+  // Ni spillere: korrigert til 8..0 etter avklart regel 22.10.2026.
   // Vinner får alltid 8; fordelingen nedover avhenger av antall deltakere.
   transient let TABLE : [[Nat]] = [
     [8, 0],                                  // 2 spillere
@@ -92,7 +91,7 @@ persistent actor Bordtennis {
     [8, 6, 4, 2, 1, 0],                      // 6
     [8, 6, 4, 3, 2, 1, 0],                   // 7
     [8, 6, 5, 4, 3, 2, 1, 0],                // 8
-    [8, 6, 5, 4, 3, 2, 1, 1, 0],             // 9
+    [8, 7, 6, 5, 4, 3, 2, 1, 0],             // 9
     [8, 6, 5, 4, 3, 2, 2, 1, 1, 0],          // 10
     [8, 6, 5, 4, 3, 2, 2, 1, 1, 0, 0],       // 11
     [8, 6, 5, 4, 3, 2, 2, 1, 1, 1, 0, 0],    // 12
@@ -192,6 +191,40 @@ persistent actor Bordtennis {
 
   public query func listGames() : async [Game] {
     Iter.toArray(games.vals())
+  };
+
+  // Controller-only maintenance: compare the complete expected records before
+  // changing anything. No await between validation and writes: all-or-nothing.
+  // Rescoring preserves IDs, dates, players, placements, notes and recordedBy.
+  public shared ({ caller }) func correctGames(expected : [Game], remove : ?Game) : async { #ok; #err : Text } {
+    if (not Principal.isController(caller)) { return #err("Controller required") };
+    let seen = Map.HashMap<GameId, Bool>(expected.size(), Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
+    for (g in expected.vals()) {
+      if (Option.isSome(seen.get(g.id))) { return #err("Duplicate game ID") };
+      seen.put(g.id, true);
+      switch (games.get(g.id)) {
+        case (?current) { if (current != g) { return #err("Game changed; refresh expected data") } };
+        case null { return #err("Game not found") };
+      };
+    };
+    switch (remove) {
+      case (?g) {
+        if (Option.isSome(seen.get(g.id))) { return #err("Cannot rescore and delete the same game") };
+        switch (games.get(g.id)) {
+          case (?current) { if (current != g) { return #err("Deletion target changed; refresh expected data") } };
+          case null { return #err("Deletion target not found") };
+        };
+      };
+      case null {};
+    };
+    for (g in expected.vals()) {
+      let results = Array.map<Result, Result>(g.results, func(r) {
+        { r with points = pointsFor(r.placement, g.results.size()) }
+      });
+      games.put(g.id, { g with results });
+    };
+    switch (remove) { case (?g) { ignore games.remove(g.id) }; case null {} };
+    #ok
   };
 
   // ---------- Standings ----------
