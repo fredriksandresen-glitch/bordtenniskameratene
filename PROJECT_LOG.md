@@ -12,3 +12,10 @@
 
 ### Oppfølging 22. oktober – dagens runde også godkjent
 Bruker bekreftet retting med skjermbilde. ID29 (22.oktober13:35) er nå rettet til8–7–6–5–4–3–2–1–0 med eksisterende correctGames. Fersk backup i /home/clawduser/outputs/bordtennis-rettelser-20261022/dagens-runde. Sammenligning bekrefter kun poengdiff i ID29; alle29 runder, datoer, rekkefølger, kommentarer,19 spillere/bilder og minimum beholdt. Live-historikk verifisert. Ingen ny deploy. Forrige åpne avklaring er løst.
+
+## 2026-10-22 – Halloween-tema
+- Kun visuelle CSS-overstyringer og statisk halloween-banner.svg: lilla/oransje, gresskar, flaggermus. Ingen endring i JavaScript/JSX, backend, regler eller funksjoner.
+- Testet på 320/390/1280 px, faner og spillerkort; ingen horisontal overflow eller JavaScript-feil. Kompilert JavaScript byte-identisk med forrige produksjonsversjon.
+- Publisert fire frontend-filer atomisk via asset batch; ingen WASM-oppgradering eller sletting av gamle assets. Tidligere designpreview bevart.
+- Live verifisert: alle filer matcher build, 29 runder/19 spillere/minimumskrav identiske før/etter; begge module hashes uendret og canistere Running.
+- Backup, manifest, kontrollresultater og skjermbilder: /home/clawduser/outputs/bordtennis-halloween-20261022/.
