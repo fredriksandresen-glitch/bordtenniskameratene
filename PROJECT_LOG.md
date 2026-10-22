@@ -9,3 +9,6 @@
 - Live kontroll: to runder 8..0, kun én 1.oktober med kommentar, 29 historikkort, snitt/totaler/seire avstemt. Frontend publisert atomisk (kun JS og index); CSS og tidligere preview beholdt.
 - Ytterligere funn: ID29 fra 22. oktober har samme ni-spillerfeil. Bruker spurt om den også skal rettes; foreløpig IKKE endret, utenfor de to eksplisitt angitte datoene.
 - Backup, eksakte før/etter-JSON, gamle assets/WASM, test- og oppgraderingslogger: /home/clawduser/outputs/bordtennis-rettelser-20261022/.
+
+### Oppfølging 22. oktober – dagens runde også godkjent
+Bruker bekreftet retting med skjermbilde. ID29 (22.oktober13:35) er nå rettet til8–7–6–5–4–3–2–1–0 med eksisterende correctGames. Fersk backup i /home/clawduser/outputs/bordtennis-rettelser-20261022/dagens-runde. Sammenligning bekrefter kun poengdiff i ID29; alle29 runder, datoer, rekkefølger, kommentarer,19 spillere/bilder og minimum beholdt. Live-historikk verifisert. Ingen ny deploy. Forrige åpne avklaring er løst.
