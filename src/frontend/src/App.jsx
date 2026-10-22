@@ -3,7 +3,7 @@ import { getAuthClient, makeActor, login as iiLogin, logout as iiLogout } from "
 
 const EMOJIS = ["🏓","🔥","🐉","🦊","🐼","🦁","🚀","🥷","🤖","🐝","🦄","🍕","👑","⚡","🐙","🦖"];
 
-// Speiler TABLE i backend (main.mo). Nøkkel = antall deltakere.
+// Speiler HALF_TABLE / 2 i backend (main.mo). Nøkkel = antall deltakere.
 const POINTS = {
   2:  [8, 0],
   3:  [8, 4, 0],
@@ -13,15 +13,16 @@ const POINTS = {
   7:  [8, 6, 4, 3, 2, 1, 0],
   8:  [8, 6, 5, 4, 3, 2, 1, 0],
   9:  [8, 7, 6, 5, 4, 3, 2, 1, 0],
-  10: [8, 6, 5, 4, 3, 2, 2, 1, 1, 0],
-  11: [8, 6, 5, 4, 3, 2, 2, 1, 1, 0, 0],
-  12: [8, 6, 5, 4, 3, 2, 2, 1, 1, 1, 0, 0],
-  13: [8, 6, 5, 4, 3, 2, 2, 2, 1, 1, 1, 0, 0],
+  10: [8, 7, 6, 5, 4, 3, 2, 1, 0.5, 0],
+  11: [8, 7, 6, 5, 4, 3, 2, 1.5, 1, 0.5, 0],
+  12: [8, 7, 6, 5, 4, 3, 2.5, 2, 1.5, 1, 0.5, 0],
+  13: [8, 7, 6, 5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5, 0],
 };
 
 function fmt(n, d = 2) {
   return Number(n).toFixed(d).replace(/\.00$/, "");
 }
+function pointLabel(n) { return Number(n).toLocaleString("nb-NO", { maximumFractionDigits: 1 }); }
 function medal(rank) {
   return rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : "#" + rank;
 }
@@ -172,7 +173,9 @@ export default function App() {
     if (!a) return;
     const [p, g, m] = await Promise.all([a.listPlayers(), a.listGames(), a.getMinGames()]);
     setPlayers(p.filter((x) => x.active));
-    setAllGames([...g].sort((x, y) => Number(y.playedAt - x.playedAt)));
+    setAllGames(g.map((game) => ({ ...game, results: game.results.map((r) => ({
+      ...r, points: r.pointsHalf?.length ? Number(r.pointsHalf[0]) / 2 : Number(r.points),
+    })) })).sort((x, y) => Number(y.playedAt - x.playedAt)));
     setMinGames(Number(m));
   }
 
@@ -471,7 +474,7 @@ function PlayerDetail({ s, games, players, badges, seasonLabel, onClose }) {
         <div className="kpis">
           <div className="kpi"><b>{s.wins}</b><span>seire</span></div>
           <div className="kpi"><b>{bestPlace === 99 ? "–" : medal(bestPlace)}</b><span>beste</span></div>
-          <div className="kpi"><b>{s.totalPoints}</b><span>poeng</span></div>
+          <div className="kpi"><b>{pointLabel(s.totalPoints)}</b><span>poeng</span></div>
           <div className="kpi"><b>{fmt(s.winPct * 100, 0)}%</b><span>seiersandel</span></div>
         </div>
 
@@ -494,7 +497,7 @@ function PlayerDetail({ s, games, players, badges, seasonLabel, onClose }) {
                   </div>
                   <div className="sub">av {g.results.length} spillere · {others}</div>
                 </div>
-                <div className="stat"><b style={{ fontSize: 17 }}>{Number(r.points)}p</b></div>
+                <div className="stat"><b style={{ fontSize: 17 }}>{pointLabel(r.points)}p</b></div>
               </div>
               {g.note && <div className="note">💬 {g.note}</div>}
             </div>
@@ -604,7 +607,7 @@ function NewGame({ players, actor, board, minGames, onSaved, guest }) {
                   {p ? p.name : "?"}{" "}
                   {ri && ri.official ? <span className="rkchip">#{ri.rank}</span> : <span className="rkchip off">uoff.</span>}
                 </div>
-                <div className="sub">{table[i] !== undefined ? table[i] : 0} poeng{ri ? " · snitt " + fmt(ri.avg) : ""}</div>
+                <div className="sub">{pointLabel(table[i] !== undefined ? table[i] : 0)} poeng{ri ? " · snitt " + fmt(ri.avg) : ""}</div>
               </div>
               <div className="arrows">
                 <button onClick={() => move(i, -1)}>↑</button>
@@ -654,7 +657,7 @@ function History({ games, players }) {
                 <div className="nm" style={{ fontSize: 14 }}>
                   {(byId[String(r.playerId)] || {}).emoji} {(byId[String(r.playerId)] || {}).name || "?"}
                 </div>
-                <div className="stat"><b style={{ fontSize: 15 }}>{Number(r.points)}p</b></div>
+                <div className="stat"><b style={{ fontSize: 15 }}>{pointLabel(r.points)}p</b></div>
               </div>
             ))}
             {g.note && <div className="note big">💬 {g.note}</div>}

@@ -41,6 +41,11 @@ persistent actor Bordtennis {
     recordedBy : Principal;
   };
 
+  // Wire-only extension: old stored Game/Result records keep their Nat schema.
+  // pointsHalf is an exact count of half-points; legacy points remains the floor.
+  public type ResultView = { playerId : PlayerId; placement : Nat; points : Nat; pointsHalf : ?Nat };
+  public type GameView = { id : GameId; playedAt : Int; note : Text; results : [ResultView]; recordedBy : Principal };
+
   public type Standing = {
     playerId : PlayerId;
     name : Text;
@@ -48,6 +53,7 @@ persistent actor Bordtennis {
     photo : ?Text;
     played : Nat;
     totalPoints : Nat;
+    totalPointsHalf : ?Nat;
     avgPoints : Float;
     wins : Nat;
     winPct : Float;
@@ -63,6 +69,9 @@ persistent actor Bordtennis {
   var minGames : Nat = 3;
   var playerEntries : [(PlayerId, Player)] = [];
   var gameEntries : [(GameId, Game)] = [];
+  // Only placements with a fractional +0.5. Existing games have no entry.
+  var fractionalEntries : [(GameId, [Nat])] = [];
+  transient var fractional = Map.HashMap<GameId, [Nat]>(16, Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
 
   transient var players = Map.HashMap<PlayerId, Player>(16, Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
   transient var games = Map.HashMap<GameId, Game>(64, Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
@@ -70,39 +79,56 @@ persistent actor Bordtennis {
   system func preupgrade() {
     playerEntries := Iter.toArray(players.entries());
     gameEntries := Iter.toArray(games.entries());
+    fractionalEntries := Iter.toArray(fractional.entries());
   };
 
   system func postupgrade() {
     for ((k, v) in playerEntries.vals()) { players.put(k, v) };
     for ((k, v) in gameEntries.vals()) { games.put(k, v) };
+    for ((k, v) in fractionalEntries.vals()) { fractional.put(k, v) };
+    fractionalEntries := [];
     playerEntries := [];
     gameEntries := [];
   };
 
   // ---------- Scoring ----------
-  // Poengtabell hentet direkte fra Excel-arket ("Med N stk").
-  // Ni spillere: korrigert til 8..0 etter avklart regel 22.10.2026.
-  // Vinner får alltid 8; fordelingen nedover avhenger av antall deltakere.
-  transient let TABLE : [[Nat]] = [
-    [8, 0],                                  // 2 spillere
-    [8, 4, 0],                               // 3
-    [8, 6, 3, 0],                            // 4
-    [8, 6, 4, 2, 0],                         // 5
-    [8, 6, 4, 2, 1, 0],                      // 6
-    [8, 6, 4, 3, 2, 1, 0],                   // 7
-    [8, 6, 5, 4, 3, 2, 1, 0],                // 8
-    [8, 7, 6, 5, 4, 3, 2, 1, 0],             // 9
-    [8, 6, 5, 4, 3, 2, 2, 1, 1, 0],          // 10
-    [8, 6, 5, 4, 3, 2, 2, 1, 1, 0, 0],       // 11
-    [8, 6, 5, 4, 3, 2, 2, 1, 1, 1, 0, 0],    // 12
-    [8, 6, 5, 4, 3, 2, 2, 2, 1, 1, 1, 0, 0], // 13
+  // Exact half-point units. 2..9 players retain their previously agreed scores.
+  // From 10 players, split the lowest gaps into half-points first; top = 8,7.
+  transient let HALF_TABLE : [[Nat]] = [
+    [16,0], [16,8,0], [16,12,6,0], [16,12,8,4,0],
+    [16,12,8,4,2,0], [16,12,8,6,4,2,0], [16,12,10,8,6,4,2,0],
+    [16,14,12,10,8,6,4,2,0],
+    [16,14,12,10,8,6,4,2,1,0],
+    [16,14,12,10,8,6,4,3,2,1,0],
+    [16,14,12,10,8,6,5,4,3,2,1,0],
+    [16,14,12,10,8,7,6,5,4,3,2,1,0],
   ];
 
-  func pointsFor(placement : Nat, participants : Nat) : Nat {
+  func halfPointsFor(placement : Nat, participants : Nat) : Nat {
     if (placement == 0 or placement > participants or participants < 2) { return 0 };
     let idx = if (participants > 13) 11 else participants - 2;
-    let row = TABLE[idx];
+    let row = HALF_TABLE[idx];
     if (placement <= row.size()) { row[placement - 1] } else { 0 }
+  };
+  func pointsFor(placement : Nat, participants : Nat) : Nat {
+    halfPointsFor(placement, participants) / 2
+  };
+  func setFractions(g : Game) {
+    let positions = Array.map<Result, Nat>(Array.filter<Result>(g.results, func(r) {
+      halfPointsFor(r.placement, g.results.size()) % 2 == 1
+    }), func(r) { r.placement });
+    if (positions.size() == 0) { ignore fractional.remove(g.id) }
+    else { fractional.put(g.id, positions) };
+  };
+  func resultHalf(gid : GameId, r : Result) : Nat {
+    let positions = Option.get(fractional.get(gid), []);
+    r.points * 2 + (if (Option.isSome(Array.find<Nat>(positions, func(p) { p == r.placement }))) 1 else 0)
+  };
+  func view(g : Game) : GameView {
+    { id = g.id; playedAt = g.playedAt; note = g.note; recordedBy = g.recordedBy;
+      results = Array.map<Result, ResultView>(g.results, func(r) {
+        { playerId = r.playerId; placement = r.placement; points = r.points; pointsHalf = ?resultHalf(g.id, r) }
+      }) }
   };
 
   // ---------- Players ----------
@@ -146,7 +172,7 @@ persistent actor Bordtennis {
 
   // ---------- Games ----------
   // ranking = playerIds in finishing order (index 0 = winner)
-  public shared ({ caller }) func recordGame(ranking : [PlayerId], note : Text) : async ?Game {
+  public shared ({ caller }) func recordGame(ranking : [PlayerId], note : Text) : async ?GameView {
     if (Principal.isAnonymous(caller)) { return null };
     let n = ranking.size();
     if (n < 2) { return null };
@@ -162,11 +188,12 @@ persistent actor Bordtennis {
     nextGameId += 1;
     let g : Game = { id; playedAt = Time.now(); note; results = Buffer.toArray(buf); recordedBy = caller };
     games.put(id, g);
-    ?g
+    setFractions(g);
+    ?view(g)
   };
 
   // Import av historikk fra Excel-arket (eksplisitt dato).
-  public shared ({ caller }) func importGame(ranking : [PlayerId], note : Text, playedAt : Int) : async ?Game {
+  public shared ({ caller }) func importGame(ranking : [PlayerId], note : Text, playedAt : Int) : async ?GameView {
     if (Principal.isAnonymous(caller)) { return null };
     let n = ranking.size();
     if (n < 2) { return null };
@@ -182,28 +209,30 @@ persistent actor Bordtennis {
     nextGameId += 1;
     let g : Game = { id; playedAt; note; results = Buffer.toArray(buf); recordedBy = caller };
     games.put(id, g);
-    ?g
+    setFractions(g);
+    ?view(g)
   };
 
   public func deleteGame(id : GameId) : async Bool {
+    ignore fractional.remove(id);
     switch (games.remove(id)) { case null { false }; case (?_) { true } }
   };
 
-  public query func listGames() : async [Game] {
-    Iter.toArray(games.vals())
+  public query func listGames() : async [GameView] {
+    Array.map<Game, GameView>(Iter.toArray(games.vals()), view)
   };
 
   // Controller-only maintenance: compare the complete expected records before
   // changing anything. No await between validation and writes: all-or-nothing.
   // Rescoring preserves IDs, dates, players, placements, notes and recordedBy.
-  public shared ({ caller }) func correctGames(expected : [Game], remove : ?Game) : async { #ok; #err : Text } {
+  public shared ({ caller }) func correctGames(expected : [GameView], remove : ?GameView) : async { #ok; #err : Text } {
     if (not Principal.isController(caller)) { return #err("Controller required") };
     let seen = Map.HashMap<GameId, Bool>(expected.size(), Nat.equal, func(n : Nat) : Nat32 { Nat32.fromNat(n % 4294967295) });
     for (g in expected.vals()) {
       if (Option.isSome(seen.get(g.id))) { return #err("Duplicate game ID") };
       seen.put(g.id, true);
       switch (games.get(g.id)) {
-        case (?current) { if (current != g) { return #err("Game changed; refresh expected data") } };
+        case (?current) { if (view(current) != g) { return #err("Game changed; refresh expected data") } };
         case null { return #err("Game not found") };
       };
     };
@@ -211,19 +240,21 @@ persistent actor Bordtennis {
       case (?g) {
         if (Option.isSome(seen.get(g.id))) { return #err("Cannot rescore and delete the same game") };
         switch (games.get(g.id)) {
-          case (?current) { if (current != g) { return #err("Deletion target changed; refresh expected data") } };
+          case (?current) { if (view(current) != g) { return #err("Deletion target changed; refresh expected data") } };
           case null { return #err("Deletion target not found") };
         };
       };
       case null {};
     };
     for (g in expected.vals()) {
-      let results = Array.map<Result, Result>(g.results, func(r) {
-        { r with points = pointsFor(r.placement, g.results.size()) }
+      let results = Array.map<ResultView, Result>(g.results, func(r) {
+        { playerId = r.playerId; placement = r.placement; points = pointsFor(r.placement, g.results.size()) }
       });
-      games.put(g.id, { g with results });
+      let updated : Game = { id = g.id; playedAt = g.playedAt; note = g.note; recordedBy = g.recordedBy; results };
+      games.put(g.id, updated);
+      setFractions(updated);
     };
-    switch (remove) { case (?g) { ignore games.remove(g.id) }; case null {} };
+    switch (remove) { case (?g) { ignore games.remove(g.id); ignore fractional.remove(g.id) }; case null {} };
     #ok
   };
 
@@ -234,13 +265,13 @@ persistent actor Bordtennis {
     for (g in games.vals()) {
       for (r in g.results.vals()) {
         let (played, pts, wins) = Option.get(acc.get(r.playerId), (0, 0, 0));
-        acc.put(r.playerId, (played + 1, pts + r.points, wins + (if (r.placement == 1) 1 else 0)));
+        acc.put(r.playerId, (played + 1, pts + resultHalf(g.id, r), wins + (if (r.placement == 1) 1 else 0)));
       };
     };
     let buf = Buffer.Buffer<Standing>(16);
     for (p in players.vals()) {
       let (played, pts, wins) = Option.get(acc.get(p.id), (0, 0, 0));
-      let avg = if (played == 0) 0.0 else Float.fromInt(pts) / Float.fromInt(played);
+      let avg = if (played == 0) 0.0 else Float.fromInt(pts) / 2.0 / Float.fromInt(played);
       let wpct = if (played == 0) 0.0 else Float.fromInt(wins) / Float.fromInt(played);
       buf.add({
         playerId = p.id;
@@ -248,7 +279,8 @@ persistent actor Bordtennis {
         emoji = p.emoji;
         photo = p.photo;
         played;
-        totalPoints = pts;
+        totalPoints = pts / 2;
+        totalPointsHalf = ?pts;
         avgPoints = avg;
         wins;
         winPct = wpct;

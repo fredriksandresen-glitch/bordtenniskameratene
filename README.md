@@ -23,7 +23,7 @@ Erstatter Excel-arket `Ranking Bordtennis 2026.xlsx`.
 
 ## Poengmodell
 
-Hentet direkte fra Excel-arket (tabellen «Med N stk»). Vinner får alltid **8 poeng**,
+Basert på Excel-arket (tabellen «Med N stk»), med avklart regel for ni eller flere spillere 22. oktober 2026. Vinner får alltid **8 poeng**,
 fordelingen nedover avhenger av antall deltakere. Regelen for ni spillere ble
 avklart 22. oktober 2026 til 8–7–6–5–4–3–2–1–0; øvrige fordelinger er uendret:
 
@@ -36,8 +36,10 @@ avklart 22. oktober 2026 til 8–7–6–5–4–3–2–1–0; øvrige fordelin
 | 7 | 8-6-4-3-2-1-0 |
 | 8 | 8-6-5-4-3-2-1-0 |
 | 9 | 8-7-6-5-4-3-2-1-0 |
-| 10 | 8-6-5-4-3-2-2-1-1-0 |
-| 13 | 8-6-5-4-3-2-2-2-1-1-1-0-0 |
+| 10 | 8–7–6–5–4–3–2–1–0,5–0 |
+| 11 | 8–7–6–5–4–3–2–1,5–1–0,5–0 |
+| 12 | 8–7–6–5–4–3–2,5–2–1,5–1–0,5–0 |
+| 13 | 8–7–6–5–4–3,5–3–2,5–2–1,5–1–0,5–0 |
 
 Ranking sorteres på snittpoeng, med antall seire som tiebreak.
 
@@ -61,3 +63,6 @@ src/frontend/           React + Vite
   src/auth.js           Internet Identity
   src/bordtennis.did.js Candid-grensesnitt
 ```
+
+### Eksakte halvpoeng
+API-resultater har `pointsHalf` (optional Nat, antall halvpoeng); faktisk poengsum er `pointsHalf / 2`, med `points` som fallback for eldre serverversjoner. `points` beholder heltallsdelen for bakoverkompatibilitet. `standings.totalPointsHalf` er eksakt sum i halvpoeng. Backend lagrer brøkplasseringer separat, slik at gammel historikk ikke omtolkes. Rettelser må sammenligne hele `GameView`, inkludert `pointsHalf`.

@@ -7,7 +7,7 @@ export const idlFactory = ({ IDL }) => {
     active: IDL.Bool,
     createdAt: IDL.Int,
   });
-  const Result = IDL.Record({ playerId: IDL.Nat, placement: IDL.Nat, points: IDL.Nat });
+  const Result = IDL.Record({ playerId: IDL.Nat, placement: IDL.Nat, points: IDL.Nat, pointsHalf: IDL.Opt(IDL.Nat) });
   const Game = IDL.Record({
     id: IDL.Nat,
     playedAt: IDL.Int,
@@ -22,6 +22,7 @@ export const idlFactory = ({ IDL }) => {
     photo: IDL.Opt(IDL.Text),
     played: IDL.Nat,
     totalPoints: IDL.Nat,
+    totalPointsHalf: IDL.Opt(IDL.Nat),
     avgPoints: IDL.Float64,
     wins: IDL.Nat,
     winPct: IDL.Float64,

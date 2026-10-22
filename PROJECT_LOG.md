@@ -19,3 +19,11 @@ Bruker bekreftet retting med skjermbilde. ID29 (22.oktober13:35) er nå rettet t
 - Publisert fire frontend-filer atomisk via asset batch; ingen WASM-oppgradering eller sletting av gamle assets. Tidligere designpreview bevart.
 - Live verifisert: alle filer matcher build, 29 runder/19 spillere/minimumskrav identiske før/etter; begge module hashes uendret og canistere Running.
 - Backup, manifest, kontrollresultater og skjermbilder: /home/clawduser/outputs/bordtennis-halloween-20261022/.
+
+## 2026-10-22 – halvpoeng og rekordrunden
+- Bruker bekreftet 11-spillerfordeling 8–7–6–5–4–3–2–1,5–1–0,5–0. Runder med 9+ har 8/7 i toppen; laveste gap deles først ved 10–13. 2–9-tabeller beholdt.
+- Additiv lagring av brøkplasseringer og optional pointsHalf/totalPointsHalf i API, nøyaktige halvpoengenheter uten migrering/omtolking av eldre Game-data. Frontend normaliserer én gang ved innlesing, inkludert historikk, badges, snitt, ranking og spillerkort; poengvisning med norsk desimalkomma.
+- Lokal test: oppgradering bevarer eldre spill/bilder/innstillinger; avviser uautorisert og stale retting, inklusive halvpoeng; kun ønsket runde endres; alle tabeller 2–13 og backend-summer avstemt; ny oppgradering bevarer halvpoeng. Stable-kompatibilitet og build bestått.
+- Ekstra backend-snapshot: 00000000000000010000000000f0a69d0101. Etter upgrade var alle gamle data identiske. Rettet deretter kun ID30 (22.oktober, «Rekord mange i dag»). 30 runder, 22 spillere, metadata/bilder/minimum bevart.
+- Live backend-summer og snitt avstemt mot historikken; nettleser viser 1,5p/0,5p og alle 30 historikkort, uten JS-feil/overflow. Publisert kun ny JS og index; Halloween-CSS/SVG, preview og eldre assets beholdt.
+- Audit og testskript: /home/clawduser/outputs/bordtennis-halvpoeng-20261022/.
